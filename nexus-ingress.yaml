@@ -1,0 +1,12 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nexus-ingress
+spec:
+  rules:
+  - host: nexus.portworx.zone
+    http:
+      paths:
+      - backend: 
+          serviceName: nexus
+          servicePort: 8081

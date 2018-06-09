@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nexus
+spec:
+  ports:
+  - port: 8081
+  selector:
+    app: nexus
+  clusterIP: None
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nexus-pv-claim
+  annotations:
+    volume.beta.kubernetes.io/storage-class: portworx-sc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1beta2 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: nexus
+spec:
+  selector:
+    matchLabels:
+      app: nexus
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: nexus
+    spec:
+      securityContext:
+        fsGroup: 2000
+      containers:
+      - image: sonatype/nexus3:3.9.0
+        name: nexus
+        ports:
+        - containerPort: 8081
+          name: http
+        volumeMounts:
+        - name: nexus-persistent-storage
+          mountPath: /nexus-data
+      volumes:
+      - name: nexus-persistent-storage
+        persistentVolumeClaim:
+          claimName: nexus-pv-claim
